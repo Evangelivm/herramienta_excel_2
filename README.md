@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Excel Processing Tool Documentation
 
-## Getting Started
+## Overview
 
-First, run the development server:
+This application is designed to process and transform Excel files containing accounting data into a standardized format for database insertion. It's built with **Next.js** and provides a web interface for file upload and data processing.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Core Features
+
+### 1. Excel File Processing
+
+- Accepts `.xlsx` files as input
+- Extracts specific columns from the input file:
+  - Identification information
+  - Names
+  - Base amounts
+  - IGV (tax) amounts
+  - Totals
+  - Currency information
+
+### 2. Data Preview
+
+Displays a preview table showing:
+
+- Identification numbers
+- Names
+- Base amounts (BI)
+- IGV amounts
+- Total amounts
+- Currency type (`MN` for PEN, `US` for USD)
+
+### 3. Transaction Number Management
+
+Provides two options:
+
+- **Auto-numbering** starting from `0001`
+- **Manual numbering** with current record number lookup
+
+### 4. Month Selection
+
+- Includes a dropdown menu for selecting the transaction month
+- Automatically filters available months based on the current date
+- Integrates with the transaction numbering system
+
+### 5. Database Integration
+
+- Connects to a MySQL database using environment variables
+- Performs **batch insertions** of processed data
+- Maintains **transaction number sequences**
+- Provides feedback on insertion success/failure
+
+## Technical Components
+
+### Database Configuration
+
+Defined in `mysql.ts`:
+
+```ts
+{
+  host: process.env.HOST_NAME,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASS,
+  port: process.env.DB_PORT
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### API Endpoints
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `route.ts` – Handles data insertion into the database
+- `query.ts` – Retrieves the latest transaction number
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Data Processing
 
-## Learn More
+- Uses `ExcelJS` for file parsing
+- Implements **error handling** and **validation**
+- Provides progress feedback using **toast notifications**
 
-To learn more about Next.js, take a look at the following resources:
+## Usage Flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. User uploads an Excel file through the web interface
+2. System displays a preview of the extracted data
+3. User selects the transaction month
+4. User chooses numbering method (auto or manual)
+5. System processes and validates the data
+6. Data is inserted into the database
+7. System provides confirmation and transaction IDs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Error Handling
 
-## Deploy on Vercel
+- Validates file format and content
+- Provides user feedback via toast notifications
+- Implements database error handling
+- Includes transaction rollback capabilities
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Requirements
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Node.js**
+- **MySQL database**
+- Required environment variables:
+  - `HOST_NAME`
+  - `DB_USER`
+  - `DB_NAME`
+  - `DB_PASS`
+  - `DB_PORT`
+
+## Production Deployment
+
+Docker configuration included for deployment:
+
+```yaml
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      HOSTNAME: 0.0.0.0
+```
